@@ -1,25 +1,33 @@
 package org.aber.tfb.store.model.entity;
 
+import lombok.Data;
+
 import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "products")
+@Table(name = "PRODUCTS")
+@Data
 public class Product {
 
     @Id
-    @GeneratedValue
-    @Column(name = "PRODUCT_ID")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "APPLICATION_ID")
     private Long id;
 
-    private Set<Contact> contacts;
+    @Column(name = "PRODUCT_NAME", nullable = false, unique = true)
+    private String productName;
 
-    @ManyToMany(mappedBy = "products")
-    public Set<Contact> getContacts() {
-        return contacts;
-    }
+    @Column(name = "DT_CREATED")
+    private LocalDateTime dateCreated;
 
-    public void setContacts(Set<Contact> contacts) {
-        this.contacts = contacts;
-    }
+    @ManyToMany(targetEntity = Contact.class,
+            mappedBy = "products",
+            cascade = CascadeType.MERGE,
+            fetch = FetchType.LAZY)
+    @OrderBy("dateCreated ASC")
+    private Set<Contact> contacts = new HashSet<>();
+
 }

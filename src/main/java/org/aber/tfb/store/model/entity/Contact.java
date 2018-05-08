@@ -1,28 +1,29 @@
 package org.aber.tfb.store.model.entity;
 
+import lombok.Data;
+
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "contacts")
+@Table(name = "CONTACTS")
+@Data
 public class Contact {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "CONTACT_ID")
     private Long id;
 
-    private Set<Product> products;
+    @Column(name = "CONTACT_NAME", nullable = false, unique = true)
+    private String name;
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "contact_product",
+    @ManyToMany(cascade = CascadeType.MERGE,
+            fetch = FetchType.LAZY)
+    @JoinTable(name = "CONTACT_PRODUCT",
             joinColumns = @JoinColumn(name = "REF_CONTACT_ID", referencedColumnName = "CONTACT_ID"),
-            inverseJoinColumns = @JoinColumn(name = "REF_PRODUCT_ID", referencedColumnName = "PRODUCT_ID"))
-    public Set<Product> getProducts() {
-        return products;
-    }
+            inverseJoinColumns = @JoinColumn(name = "REF_APPLICATION_ID", referencedColumnName = "APPLICATION_ID"))
+    private Set<Product> products = new HashSet<>();
 
-    public void setProducts(Set<Product> products) {
-        this.products = products;
-    }
 }
