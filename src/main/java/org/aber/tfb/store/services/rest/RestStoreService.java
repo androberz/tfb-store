@@ -4,6 +4,7 @@ import org.aber.tfb.store.model.business.Order;
 import org.aber.tfb.store.services.StoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,7 +25,7 @@ public class RestStoreService {
         this.storeService = storeService;
     }
 
-    @GetMapping("/contacts/{contactId}/lastOrder")
+    @GetMapping(value = "/contacts/{contactId}/lastOrder", produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
     public ResponseEntity<Order> getLatestOrderFor(@PathVariable(name = "contactId") @NotNull Long contactId) {
         Optional<Order> lastOrderForContact = storeService.getLastOrderFor(contactId);
 

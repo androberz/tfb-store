@@ -1,6 +1,5 @@
 package org.aber.tfb.store.services.rest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import org.aber.tfb.store.TfbStoreApplication;
 import org.aber.tfb.store.model.business.Order;
@@ -16,6 +15,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,7 +45,7 @@ public class RestStoreServiceTest {
     @Autowired
     private ProductRepository productRepository;
     @Autowired
-    private ObjectMapper objectMapper;
+    private Jackson2ObjectMapperBuilder objectMapperBuilder;
 
     private Contact contactWithProducts;
     private Contact contactWithoutProducts;
@@ -67,27 +67,41 @@ public class RestStoreServiceTest {
     public void testGettingLastOrderForContact_contact_not_found() throws Exception {
         String contactIdNotFound = "99991";
 
-        mockMvc.perform(MockMvcRequestBuilders.get(GET_CONTACT_LAST_ORDER_URL, contactIdNotFound)
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(MockMvcRequestBuilders.get(GET_CONTACT_LAST_ORDER_URL, contactIdNotFound))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     public void testGettingLastOrderForContact_contact_found_product_not_found() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get(GET_CONTACT_LAST_ORDER_URL, contactWithoutProducts.getId())
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(MockMvcRequestBuilders.get(GET_CONTACT_LAST_ORDER_URL, contactWithoutProducts.getId()))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    public void testGettingLastOrderForContact_contact_found_product_found() throws Exception {
+    public void testGettingLastOrderForContact_contact_found_product_found_json() throws Exception {
         Product lastProduct = contactWithProducts.getProducts().stream().filter(product -> product.getProductName().equals("TestProduct_1")).findFirst().get();
         Long contactId = contactWithProducts.getId();
 
         mockMvc.perform(MockMvcRequestBuilders.get(GET_CONTACT_LAST_ORDER_URL, contactId)
-                .contentType(MediaType.APPLICATION_JSON))
+                .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(Order.builder()
+                .andExpect(content().json(objectMapperBuilder.build().writeValueAsString(Order.builder()
+                        .contactId(contactId)
+                        .applicationId(lastProduct.getId())
+                        .productName(lastProduct.getProductName())
+                        .timeCreated(lastProduct.getDateCreated())
+                        .build())));
+    }
+
+    @Test
+    public void testGettingLastOrderForContact_contact_found_product_found_xml() throws Exception {
+        Product lastProduct = contactWithProducts.getProducts().stream().filter(product -> product.getProductName().equals("TestProduct_1")).findFirst().get();
+        Long contactId = contactWithProducts.getId();
+
+        mockMvc.perform(MockMvcRequestBuilders.get(GET_CONTACT_LAST_ORDER_URL, contactId)
+                .accept(MediaType.APPLICATION_XML))
+                .andExpect(status().isOk())
+                .andExpect(content().xml(objectMapperBuilder.createXmlMapper(true).build().writeValueAsString(Order.builder()
                         .contactId(contactId)
                         .applicationId(lastProduct.getId())
                         .productName(lastProduct.getProductName())
